@@ -1,0 +1,451 @@
+% Verified bibliography for the claim-evidence verifier paper.
+% Every entry verified against ACL Anthology / arXiv / PMLR / JMLR / NeurIPS / publisher DOI.
+% "cite at" comments mark where each reference belongs in paper.tex.
+
+% ---------- core set ----------
+
+% cite at: systems — the model under test
+@article{yang2024qwen25,
+  title   = {Qwen2.5 Technical Report},
+  author  = {Yang, An and Yang, Baosong and Zhang, Beichen and Hui, Binyuan and
+             Zheng, Bo and Yu, Bowen and Li, Chengyuan and Liu, Dayiheng and
+             Huang, Fei and Wei, Haoran and others},
+  journal = {arXiv preprint arXiv:2412.15115},
+  year    = {2024},
+  url     = {https://arxiv.org/abs/2412.15115}
+}
+
+% cite at: introduction — RAG framing
+@inproceedings{lewis2020retrieval,
+  title     = {Retrieval-Augmented Generation for Knowledge-Intensive {NLP} Tasks},
+  author    = {Lewis, Patrick and Perez, Ethan and Piktus, Aleksandra and Petroni, Fabio and
+               Karpukhin, Vladimir and Goyal, Naman and K{\"u}ttler, Heinrich and Lewis, Mike and
+               Yih, Wen-tau and Rockt{\"a}schel, Tim and Riedel, Sebastian and Kiela, Douwe},
+  booktitle = {Advances in Neural Information Processing Systems 33},
+  year      = {2020},
+  url       = {https://arxiv.org/abs/2005.11401}
+}
+
+% cite at: systems / related work — reason-then-decide regime
+@inproceedings{wei2022chain,
+  title     = {Chain-of-Thought Prompting Elicits Reasoning in Large Language Models},
+  author    = {Wei, Jason and Wang, Xuezhi and Schuurmans, Dale and Bosma, Maarten and
+               Ichter, Brian and Xia, Fei and Chi, Ed and Le, Quoc V. and Zhou, Denny},
+  booktitle = {Advances in Neural Information Processing Systems 35},
+  pages     = {24824--24837},
+  year      = {2022},
+  url       = {https://arxiv.org/abs/2201.11903}
+}
+
+% cite at: results / failure analysis — CoT gains are task-dependent
+@inproceedings{sprague2025cot,
+  title     = {To {CoT} or not to {CoT}? Chain-of-thought helps mainly on math and symbolic reasoning},
+  author    = {Sprague, Zayne and Yin, Fangcong and Rodriguez, Juan Diego and Jiang, Dongwei and
+               Wadhwa, Manya and Singhal, Prasann and Zhao, Xinyu and Ye, Xi and
+               Mahowald, Kyle and Durrett, Greg},
+  booktitle = {International Conference on Learning Representations},
+  year      = {2025},
+  url       = {https://arxiv.org/abs/2409.12183}
+}
+
+% cite at: evaluation protocol — ECE
+@inproceedings{guo2017calibration,
+  title     = {On Calibration of Modern Neural Networks},
+  author    = {Guo, Chuan and Pleiss, Geoff and Sun, Yu and Weinberger, Kilian Q.},
+  booktitle = {Proceedings of the 34th International Conference on Machine Learning},
+  series    = {Proceedings of Machine Learning Research},
+  volume    = {70},
+  pages     = {1321--1330},
+  publisher = {PMLR},
+  year      = {2017},
+  url       = {https://proceedings.mlr.press/v70/guo17a.html}
+}
+
+% cite at: evaluation protocol — the Brier score itself
+@article{brier1950verification,
+  title   = {Verification of forecasts expressed in terms of probability},
+  author  = {Brier, Glenn W.},
+  journal = {Monthly Weather Review},
+  volume  = {78},
+  number  = {1},
+  pages   = {1--3},
+  year    = {1950},
+  doi     = {10.1175/1520-0493(1950)078<0001:VOFEIT>2.0.CO;2}
+}
+
+% cite at: results/limitations — eliciting calibrated probabilities from chat models is nontrivial
+@inproceedings{tian2023just,
+  title     = {Just Ask for Calibration: Strategies for Eliciting Calibrated Confidence Scores
+               from Language Models Fine-Tuned with Human Feedback},
+  author    = {Tian, Katherine and Mitchell, Eric and Zhou, Allan and Sharma, Archit and
+               Rafailov, Rafael and Yao, Huaxiu and Finn, Chelsea and Manning, Christopher},
+  booktitle = {Proceedings of EMNLP},
+  pages     = {5433--5442},
+  year      = {2023},
+  url       = {https://aclanthology.org/2023.emnlp-main.330/}
+}
+
+% cite at: decision model — selective classification / risk-coverage
+@inproceedings{geifman2017selective,
+  title     = {Selective Classification for Deep Neural Networks},
+  author    = {Geifman, Yonatan and El-Yaniv, Ran},
+  booktitle = {Advances in Neural Information Processing Systems 30},
+  year      = {2017},
+  url       = {https://proceedings.neurips.cc/paper/2017/hash/4a8423d5e91fda00bb7e46540e2b0cf1-Abstract.html}
+}
+
+% cite at: decision model / label-space sensitivity — explicit abstention class
+@inproceedings{rajpurkar2018know,
+  title     = {Know What You Don't Know: Unanswerable Questions for {SQ}u{AD}},
+  author    = {Rajpurkar, Pranav and Jia, Robin and Liang, Percy},
+  booktitle = {Proceedings of ACL (Short Papers)},
+  pages     = {784--789},
+  year      = {2018},
+  url       = {https://aclanthology.org/P18-2124/}
+}
+
+% cite at: introduction / task — AIS attribution framing
+@article{rashkin2023measuring,
+  title     = {Measuring Attribution in Natural Language Generation Models},
+  author    = {Rashkin, Hannah and Nikolaev, Vitaly and Lamm, Matthew and Aroyo, Lora and
+               Collins, Michael and Das, Dipanjan and Petrov, Slav and Tomar, Gaurav Singh and
+               Turc, Iulia and Reitter, David},
+  journal   = {Computational Linguistics},
+  volume    = {49},
+  number    = {4},
+  pages     = {777--840},
+  year      = {2023},
+  url       = {https://aclanthology.org/2023.cl-4.2/}
+}
+
+% cite at: related work — fact-checking pipeline survey
+@article{guo2022survey,
+  title   = {A Survey on Automated Fact-Checking},
+  author  = {Guo, Zhijiang and Schlichtkrull, Michael and Vlachos, Andreas},
+  journal = {Transactions of the Association for Computational Linguistics},
+  volume  = {10},
+  pages   = {178--206},
+  year    = {2022},
+  url     = {https://aclanthology.org/2022.tacl-1.11/}
+}
+
+% cite at: related work — FEVER shared task
+@inproceedings{thorne2018feverst,
+  title     = {The Fact Extraction and {VER}ification ({FEVER}) Shared Task},
+  author    = {Thorne, James and Vlachos, Andreas and Cocarascu, Oana and
+               Christodoulopoulos, Christos and Mittal, Arpit},
+  booktitle = {Proceedings of the First Workshop on Fact Extraction and {VER}ification},
+  pages     = {1--9},
+  year      = {2018},
+  url       = {https://aclanthology.org/W18-5501/}
+}
+
+% ---------- additional verified ----------
+
+% cite at: limitations — verbalized probabilities from LMs
+@article{kadavath2022language,
+  title   = {Language Models (Mostly) Know What They Know},
+  author  = {Kadavath, Saurav and Conerly, Tom and Askell, Amanda and Henighan, Tom and
+             Drain, Dawn and Perez, Ethan and Schiefer, Nicholas and Hatfield-Dodds, Zac and
+             DasSarma, Nova and Tran-Johnson, Eli and others},
+  journal = {arXiv preprint arXiv:2207.05221},
+  year    = {2022},
+  url     = {https://arxiv.org/abs/2207.05221}
+}
+
+@article{lin2022teaching,
+  title   = {Teaching Models to Express Their Uncertainty in Words},
+  author  = {Lin, Stephanie and Hilton, Jacob and Evans, Owain},
+  journal = {Transactions on Machine Learning Research},
+  year    = {2022},
+  url     = {https://arxiv.org/abs/2205.14334}
+}
+
+% cite at: decision model — distribution-free thresholding (future work)
+@article{angelopoulos2021gentle,
+  title   = {A Gentle Introduction to Conformal Prediction and Distribution-Free
+             Uncertainty Quantification},
+  author  = {Angelopoulos, Anastasios N. and Bates, Stephen},
+  journal = {arXiv preprint arXiv:2107.07511},
+  year    = {2021},
+  url     = {https://arxiv.org/abs/2107.07511}
+}
+
+@article{elyaniv2010foundations,
+  title   = {On the Foundations of Noise-Free Selective Classification},
+  author  = {El-Yaniv, Ran and Wiener, Yair},
+  journal = {Journal of Machine Learning Research},
+  volume  = {11},
+  pages   = {1605--1641},
+  year    = {2010},
+  url     = {https://jmlr.org/papers/v11/el-yaniv10a.html}
+}
+
+% cite at: task — NLI entailment schema
+@inproceedings{bowman2015large,
+  title     = {A large annotated corpus for learning natural language inference},
+  author    = {Bowman, Samuel R. and Angeli, Gabor and Potts, Christopher and
+               Manning, Christopher D.},
+  booktitle = {Proceedings of EMNLP},
+  pages     = {632--642},
+  year      = {2015},
+  url       = {https://aclanthology.org/D15-1075/}
+}
+
+@inproceedings{williams2018broad,
+  title     = {A Broad-Coverage Challenge Corpus for Sentence Understanding through Inference},
+  author    = {Williams, Adina and Nangia, Nikita and Bowman, Samuel R.},
+  booktitle = {Proceedings of NAACL-HLT},
+  pages     = {1112--1122},
+  year      = {2018},
+  url       = {https://aclanthology.org/N18-1101/}
+}
+
+% cite at: intro/related — citation-bearing generation evaluation (ALCE)
+@inproceedings{gao2023enabling,
+  title     = {Enabling Large Language Models to Generate Text with Citations},
+  author    = {Gao, Tianyu and Yen, Howard and Yu, Jiatong and Chen, Danqi},
+  booktitle = {Proceedings of EMNLP},
+  pages     = {6465--6488},
+  year      = {2023},
+  url       = {https://aclanthology.org/2023.emnlp-main.398/}
+}
+
+% cite at: protocol/limitations — reporting discipline
+@inproceedings{dodge2019show,
+  title     = {Show Your Work: Improved Reporting of Experimental Results},
+  author    = {Dodge, Jesse and Gururangan, Suchin and Card, Dallas and Schwartz, Roy and
+               Smith, Noah A.},
+  booktitle = {Proceedings of EMNLP-IJCNLP},
+  pages     = {2185--2194},
+  year      = {2019},
+  url       = {https://aclanthology.org/D19-1224/}
+}
+
+@article{pineau2021improving,
+  title   = {Improving Reproducibility in Machine Learning Research (A Report from the
+             {NeurIPS} 2019 Reproducibility Program)},
+  author  = {Pineau, Joelle and Vincent-Lamarre, Philippe and Sinha, Koustuv and
+             Larivi{\`e}re, Vincent and Beygelzimer, Alina and d'Alch{\'e}-Buc, Florence and
+             Fox, Emily and Larochelle, Hugo},
+  journal = {Journal of Machine Learning Research},
+  volume  = {22},
+  number  = {164},
+  pages   = {1--20},
+  year    = {2021},
+  url     = {https://www.jmlr.org/papers/v22/20-303.html}
+}
+
+% cite at: protocol — Wilson interval
+@article{brown2001interval,
+  title   = {Interval Estimation for a Binomial Proportion},
+  author  = {Brown, Lawrence D. and Cai, T. Tony and DasGupta, Anirban},
+  journal = {Statistical Science},
+  volume  = {16},
+  number  = {2},
+  pages   = {101--133},
+  year    = {2001},
+  doi     = {10.1214/ss/1009213286}
+}
+
+% cite at: limitations — significance-testing guidance
+@inproceedings{dror2018hitchhiker,
+  title     = {The Hitchhiker's Guide to Testing Statistical Significance in Natural
+               Language Processing},
+  author    = {Dror, Rotem and Baumer, Gili and Shlomov, Segev and Reichart, Roi},
+  booktitle = {Proceedings of ACL},
+  pages     = {1383--1392},
+  year      = {2018},
+  url       = {https://aclanthology.org/P18-1128/}
+}
+
+@article{liang2023holistic,
+  title   = {Holistic Evaluation of Language Models},
+  author  = {Liang, Percy and Bommasani, Rishi and Lee, Tony and Tsipras, Dimitris and
+             Soylu, Dilara and Yasunaga, Michihiro and Zhang, Yian and others},
+  journal = {arXiv preprint arXiv:2211.09110},
+  year    = {2022},
+  url     = {https://arxiv.org/abs/2211.09110}
+}
+
+% cite at: failure analysis — label-token priors / option sensitivity
+@inproceedings{zheng2024large,
+  title     = {Large Language Models Are Not Robust Multiple Choice Selectors},
+  author    = {Zheng, Chujie and Zhou, Hao and Meng, Fandong and Zhou, Jie and Huang, Minlie},
+  booktitle = {International Conference on Learning Representations},
+  year      = {2024},
+  url       = {https://openreview.net/forum?id=shr9PXz7T0}
+}
+
+% cite at: failure analysis — numeric reasoning is a known hard slice
+@inproceedings{dua2019drop,
+  title     = {{DROP}: A Reading Comprehension Benchmark Requiring Discrete Reasoning
+               Over Paragraphs},
+  author    = {Dua, Dheeru and Wang, Yizhong and Dasigi, Pradeep and Stanovsky, Gabriel and
+               Singh, Sameer and Gardner, Matt},
+  booktitle = {Proceedings of NAACL-HLT},
+  pages     = {2368--2378},
+  year      = {2019},
+  url       = {https://aclanthology.org/N19-1246/}
+}
+
+@inproceedings{geva2020injecting,
+  title     = {Injecting Numerical Reasoning Skills into Language Models},
+  author    = {Geva, Mor and Gupta, Ankit and Berant, Jonathan},
+  booktitle = {Proceedings of ACL},
+  pages     = {946--958},
+  year      = {2020},
+  url       = {https://aclanthology.org/2020.acl-main.89/}
+}
+
+% optional: explainable fact-checking survey
+@inproceedings{kotonya2020explainable,
+  title     = {Explainable Automated Fact-Checking: A Survey},
+  author    = {Kotonya, Neema and Toni, Francesca},
+  booktitle = {Proceedings of COLING},
+  pages     = {5430--5443},
+  year      = {2020},
+  url       = {https://aclanthology.org/2020.coling-main.474/}
+}
+
+% optional: hallucination survey
+@article{ji2023survey,
+  title   = {Survey of Hallucination in Natural Language Generation},
+  author  = {Ji, Ziwei and Lee, Nayeon and Frieske, Rita and Yu, Tiezheng and Su, Dan and
+             Xu, Yan and Ishii, Etsuko and Bang, Yejin and Madotto, Andrea and Fung, Pascale},
+  journal = {ACM Computing Surveys},
+  volume  = {55},
+  number  = {12},
+  pages   = {1--38},
+  year    = {2023},
+  doi     = {10.1145/3571730}
+}
+
+% optional: climate-claim classification context (CARDS)
+@article{coan2021computer,
+  title   = {Computer-assisted classification of contrarian claims about climate change},
+  author  = {Coan, Travis G. and Boussalis, Constantine and Cook, John and Nanko, Mirjam O.},
+  journal = {Scientific Reports},
+  volume  = {11},
+  pages   = {22320},
+  year    = {2021},
+  doi     = {10.1038/s41598-021-01714-4}
+}
+
+% optional: zero-shot CoT
+@inproceedings{kojima2022large,
+  title     = {Large Language Models are Zero-Shot Reasoners},
+  author    = {Kojima, Takeshi and Gu, Shixiang Shane and Reid, Machel and Matsuo, Yutaka and
+               Iwasawa, Yusuke},
+  booktitle = {Advances in Neural Information Processing Systems 35},
+  year      = {2022},
+  url       = {https://arxiv.org/abs/2205.11916}
+}
+
+% ---------- added for author-year conversion (from inline thebibliography) ----------
+
+@inproceedings{thorne2018fever,
+  title     = {{FEVER}: a large-scale dataset for fact extraction and {VERification}},
+  author    = {Thorne, James and Vlachos, Andreas and Christodoulopoulos, Christos and Mittal, Arpit},
+  booktitle = {NAACL-HLT},
+  year      = {2018},
+  url       = {https://aclanthology.org/N18-1074/}
+}
+
+@inproceedings{wadden2020scifact,
+  title     = {Fact or fiction: Verifying scientific claims},
+  author    = {Wadden, David and Lin, Shanchuan and Lo, Kyle and Wang, Lucy Lu and van Zuylen, Madeleine and Cohan, Arman and Hajishirzi, Hannaneh},
+  booktitle = {EMNLP},
+  year      = {2020},
+  url       = {https://aclanthology.org/2020.emnlp-main.609/}
+}
+
+@inproceedings{jiang2020hover,
+  title     = {{HoVer}: A dataset for many-hop fact extraction and claim verification},
+  author    = {Jiang, Yichen and Bordia, Shikha and Zhong, Zheng and Dognin, Charles and Singh, Maneesh and Bansal, Mohit},
+  booktitle = {Findings of EMNLP},
+  year      = {2020},
+  url       = {https://arxiv.org/abs/2011.03088}
+}
+
+@inproceedings{schuster2021vitaminc,
+  title     = {Get your vitamin {C}! robust fact verification with contrastive evidence},
+  author    = {Schuster, Tal and Fisch, Adam and Barzilay, Regina},
+  booktitle = {NAACL-HLT},
+  year      = {2021},
+  url       = {https://aclanthology.org/2021.naacl-main.52/}
+}
+
+@article{diggelmann2020climatefever,
+  title   = {{CLIMATE-FEVER}: A dataset for verification of real-world climate claims},
+  author  = {Diggelmann, Thomas and Boyd-Graber, Jordan and Bulian, Jannis and Giuglea, Massimiliano and Leippold, Markus},
+  journal = {arXiv preprint arXiv:2012.00614},
+  year    = {2020},
+  url     = {https://arxiv.org/abs/2012.00614}
+}
+
+@inproceedings{he2021deberta,
+  title     = {{DeBERTa}: Decoding-enhanced {BERT} with disentangled attention},
+  author    = {He, Pengcheng and Liu, Xiaodong and Gao, Jianfeng and Chen, Weizhu},
+  booktitle = {ICLR},
+  year      = {2021},
+  url       = {https://arxiv.org/abs/2006.03654}
+}
+
+@inproceedings{nie2020adversarial,
+  title     = {Adversarial {NLI}: A new benchmark for natural language understanding},
+  author    = {Nie, Yixin and Williams, Adina and Dinan, Emily and Bansal, Mohit and Weston, Jason and Kiela, Douwe},
+  booktitle = {ACL},
+  year      = {2020},
+  url       = {https://aclanthology.org/2020.acl-main.441/}
+}
+
+@article{chern2023factool,
+  title   = {{FacTool}: Factuality detection in generative {AI} -- a tool augmented framework for multi-task and multi-domain scenarios},
+  author  = {Chern, I-Chun and Chern, Steffi and Chen, Shiqi and Yuan, Weizhe and Feng, Keqing and Zhou, Chunting and He, Junxian and Neubig, Graham and Liu, Pengfei},
+  journal = {arXiv preprint arXiv:2307.13528},
+  year    = {2023},
+  url     = {https://arxiv.org/abs/2307.13528}
+}
+
+@inproceedings{min2023factscore,
+  title     = {{FActScore}: Fine-grained atomic evaluation of factual precision in long form text generation},
+  author    = {Min, Sewon and Krishna, Kalpesh and Lyu, Xinxi and Lewis, Mike and Yih, Wen-tau and Koh, Pang Wei and Iyyer, Mohit and Zettlemoyer, Luke and Hajishirzi, Hannaneh},
+  booktitle = {EMNLP},
+  year      = {2023},
+  url       = {https://aclanthology.org/2023.emnlp-main.741/}
+}
+
+@inproceedings{gao2022rarr,
+  title     = {{RARR}: Researching and revising what language models say, using language models},
+  author    = {Gao, Luyu and Dai, Zhuyun and Pasupat, Panupong and Chen, Anthony and Chaganty, Arun Tejasvi and Fan, Yicheng and Zhao, Vincent Y. and Lao, Ni and Lee, Hongrae and Juan, Da-Cheng and Guu, Kelvin},
+  booktitle = {ACL},
+  year      = {2023},
+  url       = {https://aclanthology.org/2023.acl-long.910/}
+}
+
+@inproceedings{zheng2023judging,
+  title     = {Judging {LLM}-as-a-judge with {MT-Bench} and {Chatbot Arena}},
+  author    = {Zheng, Lianmin and Chiang, Wei-Lin and Sheng, Ying and Zhuang, Siyuan and Wu, Zhanghao and Zhuang, Yonghao and Lin, Zi and Li, Zhuohan and Li, Dacheng and Xing, Eric P. and Zhang, Hao and Gonzalez, Joseph E. and Stoica, Ion},
+  booktitle = {NeurIPS},
+  year      = {2023},
+  url       = {https://arxiv.org/abs/2306.05685}
+}
+
+% ---------- IPM genre anchors ----------
+
+@article{huang2026reevaluating,
+  title   = {Reevaluating zero-shot information extraction: Sampling bias, prompting transferability and sensitivity in large language models},
+  author  = {Huang, Kung-Hsiang and Xiao, Yang and Xiao, Lu and Cai, Yi and Al Moubayed, Noura},
+  journal = {Information Processing \& Management},
+  volume  = {63}, number = {4}, pages = {104611}, year = {2026},
+  doi     = {10.1016/j.ipm.2026.104611}
+}
+
+@article{wang2026unfairness,
+  title   = {Performance unfairness of large language models in cross-language fact-checking},
+  author  = {Wang, Yu and Tsang, Yee-King and Zhou, Xinyu},
+  journal = {Information Processing \& Management},
+  volume  = {63}, number = {4}, pages = {104616}, year = {2026},
+  doi     = {10.1016/j.ipm.2026.104616}
+}

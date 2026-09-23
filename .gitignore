@@ -1,0 +1,22 @@
+# data and run artifacts (not released)
+data/raw/
+data/unified/
+results/
+build/
+output/
+models/
+ref/
+tmp/
+
+# manuscript (released separately)
+paper.tex
+table.md
+research_notes.md
+highlights.txt
+
+# python / os noise
+__pycache__/
+*.pyc
+.DS_Store
+.env
+secrets*
