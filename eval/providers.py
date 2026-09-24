@@ -88,7 +88,14 @@ class JevClient:
 
 
 class QwenClient:
-    """OpenAI-compatible chat client for the small Qwen checkpoints."""
+    """OpenAI-compatible chat client for the small Qwen checkpoints.
+
+    Works against SiliconFlow or a self-hosted vLLM server (point
+    SILICONFLOW_BASE_URL at http://host:8000/v1/chat/completions and set
+    SILICONFLOW_API_KEY to any non-empty string). Only a self-hosted server
+    actually populates token logprobs; the hosted endpoint accepts the field
+    and returns nothing.
+    """
 
     def __init__(self, secrets: dict[str, str] | None = None, timeout: int = 120) -> None:
         secrets = secrets or load_secrets()
@@ -105,6 +112,7 @@ class QwenClient:
         temperature: float = 0.0,
         enable_thinking: bool = False,
         samples: int = 1,
+        top_logprobs: int = 0,
     ) -> dict:
         payload = {
             "model": model,
@@ -114,6 +122,12 @@ class QwenClient:
             "n": samples,
             "enable_thinking": enable_thinking,
         }
+        if "siliconflow" not in QWEN_URL:
+            # vLLM ignores the top-level flag and reads the chat template kwarg instead.
+            payload["chat_template_kwargs"] = {"enable_thinking": enable_thinking}
+        if top_logprobs:
+            payload["logprobs"] = True
+            payload["top_logprobs"] = top_logprobs
         started = time.time()
         data = _post(QWEN_URL, payload, self.key, self.timeout)
         latency_ms = (time.time() - started) * 1000.0
@@ -121,7 +135,9 @@ class QwenClient:
         texts = [choice.get("message", {}).get("content") or "" for choice in choices]
         usage = data.get("usage", {}) or {}
         finish = [choice.get("finish_reason") for choice in choices]
+        token_logprobs = [((choice.get("logprobs") or {}).get("content") or []) for choice in choices]
         return {
+            "logprobs": token_logprobs,
             "texts": texts,
             "usage": usage,
             "latency_ms": latency_ms,

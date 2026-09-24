@@ -10,6 +10,7 @@ import collections
 import sys
 import concurrent.futures as cf
 import json
+import math
 import random
 import threading
 import time
@@ -60,7 +61,8 @@ def allowed_labels(dataset: str) -> tuple[str, ...]:
     return tuple(label for label in ("NEI", "SUPPORTS", "REFUTES") if label in labels)
 
 
-def load_records(datasets: list[str], per_dataset: int, seed: int) -> list[dict]:
+def load_records(datasets: list[str], per_dataset: int, seed: int, full: bool = False,
+                 cap: int | None = None) -> list[dict]:
     rng = random.Random(seed)
     records: list[dict] = []
     for dataset in datasets:
@@ -68,6 +70,15 @@ def load_records(datasets: list[str], per_dataset: int, seed: int) -> list[dict]
         if not path.exists():
             raise SystemExit(f"missing unified file {path}; run data/build_unified.py first")
         rows = [json.loads(line) for line in path.open() if line.strip()]
+        if full:
+            # the whole labelled evaluation split: test when it is labelled, otherwise dev
+            split = "test" if any(row["split"] == "test" for row in rows) else "dev"
+            picked = [row for row in rows if row["split"] == split]
+            rng.shuffle(picked)
+            # a random subset of large splits; the shuffle order is fixed by the seed, so
+            # the capped set is a prefix of the full-split order and runs can be extended
+            records.extend(picked[:cap] if cap else picked)
+            continue
         rows = [row for row in rows if row["split"] in {"dev", "test"}] or rows
         by_label: dict[str, list[dict]] = collections.defaultdict(list)
         for row in rows:
@@ -107,8 +118,44 @@ def score_jev(client: JevClient, record: dict, max_chars: int, allowed: tuple[st
     }
 
 
+def decision_distribution(token_logprobs: list[dict], cot: bool, allowed: tuple[str, ...]) -> dict | None:
+    """Label distribution from the logprobs at the decision token.
+
+    Direct prompts decide at the first generated token. Reasoning prompts decide at
+    the first digit after the last FINAL marker. The top-k alternatives at that
+    position are restricted to the admissible digits and renormalised; a digit
+    missing from the top-k gets zero mass. Returns None when the server sent no
+    logprobs or the decision token cannot be located.
+    """
+    if not token_logprobs:
+        return None
+    position = 0
+    if cot:
+        starts, text = [], ""
+        for entry in token_logprobs:
+            starts.append(len(text))
+            text += entry.get("token", "")
+        marker = text.lower().rfind("final")
+        if marker == -1:
+            return None
+        position = next((i for i, start in enumerate(starts)
+                         if start >= marker + 5 and token_logprobs[i].get("token", "").strip() in DIGIT_TO_LABEL), None)
+        if position is None:
+            return None
+    entry = token_logprobs[position]
+    mass = {label: 0.0 for label in allowed}
+    for alt in entry.get("top_logprobs") or [entry]:
+        label = DIGIT_TO_LABEL.get(alt.get("token", "").strip())
+        if label in mass:
+            mass[label] += math.exp(alt["logprob"])
+    total = sum(mass.values())
+    if total <= 0:
+        return None
+    return {label: value / total for label, value in mass.items()}
+
+
 def score_qwen(client: QwenClient, record: dict, system: str, model: str, max_tokens: int, max_chars: int,
-               allowed: tuple[str, ...]) -> dict:
+               allowed: tuple[str, ...], top_logprobs: int = 0) -> dict:
     expanded = system.endswith("expanded")
     cot = "-cot-" in system
     messages = (
@@ -117,15 +164,16 @@ def score_qwen(client: QwenClient, record: dict, system: str, model: str, max_to
         else direct_messages(record["claim"], record["evidence"], expanded, allowed, max_chars)
     )
     started = time.time()
-    result = client.chat(model, messages, max_tokens=max_tokens, enable_thinking=False)
+    result = client.chat(model, messages, max_tokens=max_tokens, enable_thinking=False, top_logprobs=top_logprobs)
     latency_ms = result["latency_ms"] if result.get("latency_ms") else (time.time() - started) * 1000.0
     text = result["texts"][0] if result["texts"] else ""
     prediction = (parse_cot if cot else parse_direct)(text)
     if prediction not in allowed:
         prediction = None
+    distribution = decision_distribution((result.get("logprobs") or [[]])[0], cot, allowed) if prediction else None
     return {
         "prediction": prediction,
-        "distribution": None,
+        "distribution": distribution,
         "raw": text[:4000],
         "usage": result["usage"],
         "latency_ms": latency_ms,
@@ -146,18 +194,26 @@ def main() -> None:
     parser.add_argument("--concurrency", type=int, default=8)
     parser.add_argument("--seed", type=int, default=2026)
     parser.add_argument("--tag", default=None, help="output file suffix, e.g. pilot")
+    parser.add_argument("--full", action="store_true",
+                        help="evaluate every case of each labelled evaluation split instead of a balanced sample")
+    parser.add_argument("--retry-errors-only", action="store_true",
+                        help="rerun only rows that ended in a request error; keep protocol failures as they are")
+    parser.add_argument("--cap", type=int, default=None,
+                        help="with --full, keep at most this many randomly ordered cases per dataset")
+    parser.add_argument("--top-logprobs", type=int, default=0,
+                        help="request top-k logprobs from the Qwen server (self-hosted vLLM) to recover a label distribution")
     args = parser.parse_args()
 
     secrets = load_secrets()
     allowed_by_dataset = {name: allowed_labels(name) for name in args.datasets}
     print(f"label spaces: {allowed_by_dataset}", flush=True)
-    records = load_records(args.datasets, args.per_dataset, args.seed)
+    records = load_records(args.datasets, args.per_dataset, args.seed, args.full, args.cap)
     by_dataset = collections.Counter(r["dataset"] for r in records)
     print(f"planned {len(records)} items: {dict(by_dataset)}", flush=True)
 
     RESULTS.mkdir(parents=True, exist_ok=True)
-    jev = JevClient(secrets)
-    qwen = QwenClient(secrets)
+    jev = JevClient(secrets) if "jev" in args.systems else None
+    qwen = QwenClient(secrets) if any(s.startswith("qwen") for s in args.systems) else None
     nli = None
     if "nli" in args.systems:
         from nli_client import MODEL_NAME, NliClient, SHORT_NAME
@@ -178,7 +234,7 @@ def main() -> None:
                 previous = json.loads(line)
                 # Only treat a row as finished when it produced a usable prediction,
                 # so rate-limited rows are retried on the next invocation.
-                if previous.get("prediction"):
+                if previous.get("prediction") or (args.retry_errors_only and not previous.get("error")):
                     done.add(previous["id"])
         todo = [record for record in records if record["id"] not in done]
         print(f"[{system}] {len(todo)} to run, {len(done)} cached -> {out_path.name}", flush=True)
@@ -193,7 +249,8 @@ def main() -> None:
                     payload = nli.score(record["claim"], record["evidence"], allowed, args.max_evidence_chars)
                 else:
                     max_tokens = args.max_tokens if "-cot-" in system else args.direct_max_tokens
-                    payload = score_qwen(qwen, record, system, args.model, max_tokens, args.max_evidence_chars, allowed)
+                    payload = score_qwen(qwen, record, system, args.model, max_tokens, args.max_evidence_chars, allowed,
+                                         args.top_logprobs)
                 error = None
             except Exception as exc:  # noqa: BLE001 - recorded per item
                 payload = {"prediction": None, "distribution": None, "raw": "", "usage": {}, "latency_ms": None}

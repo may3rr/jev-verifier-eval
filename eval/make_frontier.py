@@ -103,7 +103,9 @@ def main() -> None:
                 "--", color="#666666", lw=1.1, zorder=2)
         ax.set_xlabel(xlabel, fontsize=8.5)
         ax.tick_params(labelsize=7.5)
-        ax.grid(alpha=0.25, lw=0.5)
+        ax.grid(axis="y", color="#e6e6e6", lw=0.6)
+        for side in ("top", "right"):
+            ax.spines[side].set_visible(False)
         if xlim:
             ax.set_xlim(*xlim)
         else:

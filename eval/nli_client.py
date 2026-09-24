@@ -11,6 +11,7 @@ Runs fully locally (Apple Silicon MPS); latency is measured per call.
 from __future__ import annotations
 
 import json
+import os
 import time
 
 from prompts import render_evidence
@@ -21,8 +22,10 @@ LABEL_MAP = {"entailment": "SUPPORTS", "neutral": "NEI", "contradiction": "REFUT
 
 
 class NliClient:
-    def __init__(self, model: str = MODEL_NAME, device: str = "mps"):
+    def __init__(self, model: str = MODEL_NAME, device: str | None = None):
         from transformers import pipeline
+
+        device = device or os.environ.get("NLI_DEVICE", "mps")
 
         self.model = model
         self.pipe = pipeline("text-classification", model=model, device=device)

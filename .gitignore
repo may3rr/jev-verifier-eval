@@ -13,6 +13,8 @@ paper.tex
 table.md
 research_notes.md
 highlights.txt
+zh/
+HANDOFF.md
 
 # python / os noise
 __pycache__/

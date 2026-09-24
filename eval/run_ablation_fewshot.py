@@ -11,6 +11,7 @@ Output goes to results/sensitivity/ so it never enters the main metrics glob.
 """
 from __future__ import annotations
 
+import argparse
 import json
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -21,22 +22,26 @@ from providers import QwenClient  # noqa: E402
 from prompts import cot_messages, parse_cot  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
-OUT = ROOT / "results" / "sensitivity" / "qwen-cot-expanded-lsf__qwen-qwen3-5-9b__full.jsonl"
-MAIN = ROOT / "results" / "predictions" / "qwen-cot-expanded__qwen-qwen3-5-9b__full.jsonl"
 UNIFIED = ROOT / "data" / "unified" / "hover.jsonl"
 ALLOWED = ("SUPPORTS", "REFUTES")
 MODEL = "Qwen/Qwen3.5-9B"
 MAX_TOKENS = 900
 MAX_CHARS = 6000
-CONCURRENCY = 8
 
 
 def main() -> None:
-    # same frozen HoVer sample as the main run
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--tag", default="full", help="run whose HoVer cases to reuse, e.g. full, vllm, fullset")
+    parser.add_argument("--concurrency", type=int, default=8)
+    args = parser.parse_args()
+    OUT = ROOT / "results" / "sensitivity" / f"qwen-cot-expanded-lsf__qwen-qwen3-5-9b__{args.tag}.jsonl"
+    MAIN = ROOT / "results" / "predictions" / f"qwen-cot-expanded__qwen-qwen3-5-9b__{args.tag}.jsonl"
+    OUT.parent.mkdir(parents=True, exist_ok=True)
+    # same frozen HoVer cases as the main run
     done_ids = {json.loads(l)["id"] for l in open(MAIN) if l.strip()}
     records = {json.loads(l)["id"]: json.loads(l)
                for l in open(UNIFIED) if l.strip()}
-    ids = sorted(i for i in done_ids if i in records)
+    ids = sorted(i for i in done_ids if i in records)  # hover ids only
     have = {json.loads(l)["id"] for l in open(OUT) if l.strip()} if OUT.exists() else set()
     todo = [records[i] for i in ids if i not in have]
     print(f"hover cases={len(ids)} done={len(have)} todo={len(todo)}", flush=True)
@@ -44,7 +49,7 @@ def main() -> None:
     client = QwenClient(timeout=120)
     completed = 0
     with OUT.open("a") as fh:
-        with ThreadPoolExecutor(max_workers=CONCURRENCY) as pool:
+        with ThreadPoolExecutor(max_workers=args.concurrency) as pool:
             futs = {}
             for rec in todo:
                 msgs = cot_messages(rec["claim"], rec["evidence"], True, ALLOWED,
