@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
-"""All analysis figures for the Chinese manuscript, in one shared style.
+"""Revision copy of eval/make_figs.py (2026-09-27): same figures and style, revised data.
+
+Reads the files assembled by merge.py (--data, default data_all) and writes
+fig2..fig9 as PNG (300 dpi) and SVG to revision_2026-09-27/figs. Only the data
+paths, the output names and the PNG resolution differ from the original script.
+
+Original docstring:
+All analysis figures for the Chinese manuscript, in one shared style.
 
 Figures (results/figs/*.png and *.pdf):
   fig_acc_dataset      per-dataset accuracy with Wilson 95% intervals
@@ -35,6 +42,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "eval"))
 
 import matplotlib
 matplotlib.use("Agg")
@@ -45,7 +53,8 @@ from matplotlib.patches import Patch
 from matplotlib.ticker import FormatStrFormatter, FuncFormatter, MultipleLocator
 
 import figstyle as fs
-from paper_numbers import latency_sample
+import paper_numbers_rev
+from paper_numbers_rev import latency_sample
 from prompts import parse_cot, parse_direct
 from selective import acc_at, ranked_correct
 from metrics import ece as ece_table
@@ -55,7 +64,7 @@ from metrics import ece as ece_table
 FONT_SIZE = 13
 FONT_FAMILY = ["DejaVu Sans", fs.SONG]  # per-glyph fallback: Latin and digits from DejaVu Sans, Chinese from 宋体
 FIG_W = 10.5            # inches; the paper scales every figure to the 6.1 in text width
-PNG_DPI = 600
+PNG_DPI = 300
 GRID_ALPHA = 0.3
 LEGEND = {"loc": "lower center", "frameon": False, "handlelength": 3}
 LEGEND_GAP = 0.12       # inches between the bottom legend and the axes above it
@@ -174,16 +183,22 @@ def bottom_legend(fig, handles, ncol: int, **kw) -> None:
     fig.tight_layout(rect=[0, height / fig.get_figheight(), 1, 1])
 
 
+OUT_FIGS = fs.ROOT / "revision_2026-09-27" / "figs"
+FIG_NO = {"fig_acc_dataset": 2, "fig_fast_slow": 3, "fig_reliability": 4, "fig_selective": 5,
+          "fig_selective_ds": 6, "fig_latency": 7, "fig_frontier": 8, "fig_failures": 9}
+
+
 def save(fig, name: str) -> None:
-    fs.FIGS.mkdir(parents=True, exist_ok=True)
-    fig.savefig(fs.FIGS / f"{name}.pdf", bbox_inches="tight")
-    fig.savefig(fs.FIGS / f"{name}.png", dpi=PNG_DPI, bbox_inches="tight")
+    OUT_FIGS.mkdir(parents=True, exist_ok=True)
+    stem = f"fig{FIG_NO[name]}"
+    fig.savefig(OUT_FIGS / f"{stem}.svg", bbox_inches="tight")
+    fig.savefig(OUT_FIGS / f"{stem}.png", dpi=PNG_DPI, bbox_inches="tight")
     plt.close(fig)
 
 
 # ---------------------------------------------------------------- data
 
-PRED = fs.ROOT / "results" / "predictions"
+PRED = paper_numbers_rev.PRED
 JEV_IN, QIN, QOUT = 0.042e-6, 0.10e-6, 0.15e-6  # $/token list prices
 FAILURE_KINDS = [("space", "判断空间外的答案"), ("length", "推理被截断"), ("other", "无法解析或请求失败")]
 
@@ -386,7 +401,7 @@ def plot_fast_slow(pairs: list[dict]) -> None:
             ax.plot([a, b], [y, y], color="#c4c4c4", linewidth=2.4, zorder=1, solid_capstyle="round")
             ax.plot([a], [y], linestyle="none", **marker_kw(p["fast"], 9))
             ax.plot([b], [y], linestyle="none", **marker_kw(p["slow"], 9))
-            delta = (b - a) * 100
+            delta = round(b * 100, 1) - round(a * 100, 1)  # from the one-decimal values printed in table 3
             ax.text(1.02, y, f"{delta:+.1f}".replace("-", "−"), transform=ax.get_yaxis_transform(),
                     va="center", ha="left", color="black" if abs(delta) >= 1 else NOTE,
                     weight="bold" if i == len(rows) - 1 else "normal")
@@ -568,7 +583,12 @@ def plot_failures(counts: dict) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--qwen-tag", default="eval", help="prediction tag for the Qwen runs, e.g. vllm")
+    parser.add_argument("--data", default=None, help="folder written by merge.py (default data_all)")
     args = parser.parse_args()
+    global PRED
+    if args.data:
+        paper_numbers_rev.set_data(Path(args.data).resolve())
+    PRED = paper_numbers_rev.PRED
     apply_style()
     data = load_all(args.qwen_tag)
 

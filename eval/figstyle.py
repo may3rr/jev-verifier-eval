@@ -1,10 +1,9 @@
-"""Shared figure style for the Chinese manuscript.
+"""Shared figure settings for the Chinese manuscript.
 
-Chinese journals set figure text in a sans face: 黑体 for Chinese, Arial or
-Helvetica for Latin letters and numbers. Here Arial is primary and Noto Sans CJK
-SC (思源黑体) fills in the Chinese glyphs. One color and one marker per system,
-used in every figure: color carries identity, a filled marker means fast
-thinking and a hollow marker means slow thinking.
+Chinese text in every figure is set in 宋体 (Songti SC). The framework diagram
+(make_framework.py) pairs it with Times New Roman at 8pt through apply(); the
+data figures (make_figs.py) keep their own style block and only borrow
+register_fonts() and save paths from here.
 """
 from pathlib import Path
 
@@ -19,120 +18,63 @@ FULL_WIDTH = 6.1   # inches, about 15.5 cm of text width
 FONT_SIZE = 8
 
 INK = "#1f1f1f"
-MUTED = "#6b6b6b"
-GRID = "#e4e4e4"
 RULE = "#9a9a9a"
 
-SYSTEMS = [
-    "jev", "nli",
-    "qwen-direct-compact", "qwen-direct-expanded",
-    "qwen-cot-compact", "qwen-cot-expanded",
+SONG = "Songti SC"
+SONG_TTC = Path("/System/Library/Fonts/Supplemental/Songti.ttc")
+TIMES_FILES = [
+    Path("/System/Library/Fonts/Supplemental/Times New Roman.ttf"),
+    Path("/System/Library/Fonts/Supplemental/Times New Roman Bold.ttf"),
+    Path("/System/Library/Fonts/Supplemental/Times New Roman Italic.ttf"),
+    Path("/System/Library/Fonts/Supplemental/Times New Roman Bold Italic.ttf"),
 ]
-LABEL = {
-    "jev": "JEV",
-    "nli": "NLI-DeBERTa",
-    "qwen-direct-compact": "Qwen零样本直答",
-    "qwen-direct-expanded": "Qwen少样本直答",
-    "qwen-cot-compact": "Qwen零样本推理",
-    "qwen-cot-expanded": "Qwen少样本推理",
-}
-# fixed categorical slots, validated for CVD separation (see dataviz palette check)
-COLOR = {
-    "jev": "#2a78d6",
-    "nli": "#eb6834",
-    "qwen-direct-compact": "#1baf7a",
-    "qwen-direct-expanded": "#eda100",
-    "qwen-cot-compact": "#e87ba4",
-    "qwen-cot-expanded": "#008300",
-}
-MARKER = {
-    "jev": "o",
-    "nli": "s",
-    "qwen-direct-compact": "^",
-    "qwen-direct-expanded": "D",
-    "qwen-cot-compact": "^",
-    "qwen-cot-expanded": "D",
-}
-SLOW = {"qwen-cot-compact", "qwen-cot-expanded"}
-
-DATASETS = ["fever", "scifact", "hover", "vitaminc", "climate_fever"]
-DATASET_LABEL = {
-    "fever": "FEVER",
-    "scifact": "SciFact",
-    "hover": "HoVer",
-    "vitaminc": "VitaminC",
-    "climate_fever": "Climate-FEVER",
-}
 
 
-CJK_FONT_FILES = [
-    Path.home() / "Library" / "Fonts" / "NotoSansCJKsc-Regular.otf",
-    Path.home() / "Library" / "Fonts" / "NotoSansCJKsc-Bold.otf",
-]
+def register_fonts() -> None:
+    """Make 宋体 regular and bold available to matplotlib.
+
+    matplotlib reads only the first face of a .ttc, which in Songti.ttc is the
+    Black weight, so the regular and bold faces are extracted once into the
+    matplotlib cache directory and registered from there.
+    """
+    from fontTools.ttLib import TTCollection
+    from matplotlib import font_manager
+    cache = Path(matplotlib.get_cachedir())
+    for weight in ("Regular", "Bold"):
+        path = cache / f"SongtiSC-{weight}.ttf"
+        if not path.exists():
+            for font in TTCollection(str(SONG_TTC)).fonts:
+                if font["name"].getDebugName(4) == f"{SONG} {weight}":
+                    font.save(str(path))
+                    break
+        font_manager.fontManager.addfont(str(path))
+    for path in TIMES_FILES:  # system Supplemental fonts are missing from matplotlib's cache
+        if path.exists():
+            font_manager.fontManager.addfont(str(path))
 
 
 def apply() -> None:
-    from matplotlib import font_manager
-    for path in CJK_FONT_FILES:  # user-installed fonts are missing from matplotlib's cache
-        if path.exists():
-            font_manager.fontManager.addfont(str(path))
+    """Style for the framework diagram."""
+    register_fonts()
     plt.rcParams.update({
-        # an explicit family list enables per-glyph fallback: Latin from Arial, Chinese from 思源黑体
-        "font.family": ["Arial", "Noto Sans CJK SC"],
+        # an explicit family list enables per-glyph fallback: Latin from Times New Roman, Chinese from 宋体
+        "font.family": ["Times New Roman", SONG],
         "font.size": FONT_SIZE,
-        "axes.titlesize": FONT_SIZE + 0.5,
-        "axes.titleweight": "bold",
-        "axes.labelsize": FONT_SIZE,
         "axes.labelcolor": INK,
         "axes.edgecolor": RULE,
         "axes.linewidth": 0.6,
         "axes.unicode_minus": False,
         "axes.spines.top": False,
         "axes.spines.right": False,
-        "xtick.labelsize": FONT_SIZE - 0.5,
-        "ytick.labelsize": FONT_SIZE - 0.5,
         "xtick.color": INK,
         "ytick.color": INK,
-        "xtick.major.width": 0.6,
-        "ytick.major.width": 0.6,
-        "xtick.major.size": 3,
-        "ytick.major.size": 3,
-        "legend.fontsize": FONT_SIZE - 0.5,
         "legend.frameon": False,
         "text.color": INK,
-        "savefig.dpi": 300,
+        "savefig.dpi": 600,
         "savefig.bbox": "tight",
         "savefig.pad_inches": 0.03,
         "pdf.fonttype": 42,
     })
-
-
-def ygrid(ax) -> None:
-    ax.grid(axis="y", color=GRID, linewidth=0.6)
-    ax.set_axisbelow(True)
-
-
-def xgrid(ax) -> None:
-    ax.grid(axis="x", color=GRID, linewidth=0.6)
-    ax.set_axisbelow(True)
-
-
-def marker_kw(system: str, size: float = 5.5) -> dict:
-    """Filled marker for fast thinking, hollow for slow thinking."""
-    color = COLOR[system]
-    return {
-        "marker": MARKER[system],
-        "markersize": size,
-        "markeredgecolor": color,
-        "markeredgewidth": 1.1,
-        "markerfacecolor": "white" if system in SLOW else color,
-        "color": color,
-    }
-
-
-def legend_handles(systems) -> list:
-    from matplotlib.lines import Line2D
-    return [Line2D([], [], linestyle="none", label=LABEL[s], **marker_kw(s)) for s in systems]
 
 
 def save(fig, name: str) -> Path:

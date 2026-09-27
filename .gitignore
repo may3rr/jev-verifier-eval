@@ -22,3 +22,10 @@ __pycache__/
 .DS_Store
 .env
 secrets*
+
+# manuscript drafts and reviewer copies
+*.docx
+
+# 2026-09-27 revision: only the scripts are released; runs, merged data, figures and report stay local
+revision_2026-09-27/*
+!revision_2026-09-27/scripts/

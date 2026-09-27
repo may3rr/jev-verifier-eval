@@ -1,5 +1,14 @@
 #!/usr/bin/env python3
-"""Every number the Chinese manuscript reports, computed from the prediction logs.
+"""Revision copy of eval/paper_numbers.py (2026-09-27): same metrics, revised data.
+
+Reads the files assembled by merge.py (--data, default data_all): Qwen rows with the
+label-safe HoVer reruns and the 2048-token truncation reruns; JEV and NLI unchanged.
+Qwen latency comes from <data>/latency, JEV and NLI latency from the original files.
+Writes <data>/paper_numbers.json. Everything below the data paths is the original
+script, plus derived() at the end for the numbers quoted in the text.
+
+Original docstring:
+Every number the Chinese manuscript reports, computed from the prediction logs.
 
 Source: the `eval` files written by make_evalset.py, the same 9,681 cases for
 every system (SciFact, HoVer and Climate-FEVER in full, a seeded random 3,000 of
@@ -18,15 +27,24 @@ import statistics
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "eval"))
 
 from metrics import brier, ece
 from selective import summarise
 
-ROOT = Path(__file__).resolve().parent.parent
-PRED = ROOT / "results" / "predictions"
+REV = ROOT / "revision_2026-09-27"
+DATA = REV / "data_all"
+PRED = DATA / "predictions"
+LAT = DATA / "latency"
+ORIG_PRED = ROOT / "results" / "predictions"
 SENS = ROOT / "results" / "sensitivity"
-OUT = ROOT / "results" / "paper_numbers.json"
+OUT = DATA / "paper_numbers.json"
+
+
+def set_data(path: Path) -> None:
+    global DATA, PRED, LAT, OUT
+    DATA, PRED, LAT, OUT = path, path / "predictions", path / "latency", path / "paper_numbers.json"
 
 SYSTEMS = ["jev", "qwen-direct-compact", "qwen-direct-expanded",
            "qwen-cot-compact", "qwen-cot-expanded", "nli"]
@@ -69,12 +87,12 @@ def latency_sample(system: str) -> list[dict]:
     internet is measured and removed in measure_jev_latency.py. NLI ran one case at
     a time on the serving machine in its full-split run, which holds 138 of them.
     """
-    files = sorted(SENS.glob(f"{system}__*lat1.jsonl"))
+    files = sorted(LAT.glob(f"{system}__lat1.jsonl")) or sorted(SENS.glob(f"{system}__*lat1.jsonl"))
     if files:
         rows = load(files[0])
     else:
         ids = {r["id"] for r in load(next(SENS.glob("qwen-direct-compact__*__vllm-lat1.jsonl")))}
-        rows = [r for r in load(next(PRED.glob(f"{system}__*__fullset.jsonl"))) if r["id"] in ids]
+        rows = [r for r in load(next(ORIG_PRED.glob(f"{system}__*__fullset.jsonl"))) if r["id"] in ids]
     return [r for r in rows if r.get("latency_ms") is not None and not r.get("error")]
 
 
@@ -144,7 +162,43 @@ def escalation(fast: list[dict], slow: list[dict]) -> dict:
     return res
 
 
+def derived(out: dict, data: dict) -> dict:
+    """Numbers the manuscript quotes in the text, from the same inputs as the tables."""
+    m, cal, sel, eff = out["metrics"], out["calibration"], out["selective"], out["efficiency"]
+    pairs = (("qwen-direct-compact", "qwen-cot-compact"), ("qwen-direct-expanded", "qwen-cot-expanded"))
+    d: dict = {"equal_weight_acc": {s: statistics.mean(m[s][ds][0] for ds in DATASETS) for s in SYSTEMS}}
+    d["cot_minus_direct_pp"] = {f"{a}>{b}": {ds: 100 * (m[b][ds][0] - m[a][ds][0]) for ds in DATASETS + ["pooled"]}
+                                for a, b in pairs}
+    d["review_per_10k_at_0.90"] = {s: 10000 * (1 - sel[s]["auto_rate"]["0.90"]) for s in SYSTEMS}
+    lat = {s: sorted(r["latency_ms"] for r in latency_sample(s)) for s in SYSTEMS}
+    d["latency"] = {f"{a}>{b}": {"median_ratio": eff[b]["lat_median"] / eff[a]["lat_median"],
+                                 "p95_ratio": eff[b]["lat_p95"] / eff[a]["lat_p95"],
+                                 "share_over_10s": sum(x > 10000 for x in lat[b]) / len(lat[b]),
+                                 "cost_ratio": eff[b]["cost_hosted"] / eff[a]["cost_hosted"]} for a, b in pairs}
+    d["failures"] = {}
+    for s in SYSTEMS:
+        c = {}
+        for r in data[s]:
+            if "-cot-" in s and r.get("finish_reason") == "length":
+                key = "length_with_judgement" if r.get("prediction") else "length_no_judgement"
+            elif not r.get("prediction"):
+                key = "error" if r.get("error") else "no_legal_label"
+            else:
+                continue
+            c[f"{r['dataset']}:{key}"] = c.get(f"{r['dataset']}:{key}", 0) + 1
+        d["failures"][s] = c
+    return d
+
+
 def main() -> None:
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--data", default=None, help="folder written by merge.py (default data_all)")
+    parser.add_argument("--no-ci", action="store_true",
+                        help="skip the bootstrap intervals (not reported in the paper; tables unchanged)")
+    args = parser.parse_args()
+    if args.data:
+        set_data(Path(args.data).resolve())
     data = {s: load_system(s) for s in SYSTEMS}
     ids = {s: {r["id"] for r in rows} for s, rows in data.items()}
     assert all(v == ids["jev"] for v in ids.values()), "systems must share the same case ids"
@@ -179,7 +233,7 @@ def main() -> None:
     sel, table = {}, [["系统", "自动判定\n30%", "自动判定\n50%", "自动判定\n70%", "全部\n自动判定", "AURC",
                        "准确率≥0.90\n自动判定比例", "准确率≥0.95\n自动判定比例"]]
     for s in SYSTEMS:
-        res = summarise(data[s], with_ci=True)
+        res = summarise(data[s], with_ci=not args.no_ci)
         res["by_dataset"] = {d: summarise(by_ds[s][d], with_ci=False) for d in DATASETS}
         res.pop("curve")
         for v in res["by_dataset"].values():
@@ -225,6 +279,7 @@ def main() -> None:
     out["mcnemar"] = {f"{a}|{b}": dict(zip(("only_a", "only_b", "p"), mcnemar(data[a], data[b]))) for a, b in pairs}
     out["bonferroni_alpha"] = 0.05 / len(pairs)
 
+    out["derived"] = derived(out, data)
     OUT.write_text(json.dumps(out, ensure_ascii=False, indent=1))
     for name in ("table_main", "table_calibration", "table_selective", "table_efficiency"):
         print(name)
